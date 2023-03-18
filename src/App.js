@@ -3,34 +3,35 @@ import { useEffect, useState } from 'react';
 
 import './App.css';
 
-// Refer to the README doc for more information about using API
-// keys in client-side code. You should never do this in production
-// level code.
 const settings = {
   apiKey: process.env.REACT_APP_ALCHEMY_API_KEY,
   network: Network.ETH_MAINNET,
 };
 
-
-// In this week's lessons we used ethers.js. Here we are using the
-// Alchemy SDK is an umbrella library with several different packages.
-//
 // You can read more about the packages here:
 //   https://docs.alchemy.com/reference/alchemy-sdk-api-surface-overview#api-surface
 const alchemy = new Alchemy(settings);
 
+const SafeWallet = '0x0f82438e71ef21e07b6a5871df2a481b2dd92a98'
+
 function App() {
-  const [blockNumber, setBlockNumber] = useState();
+  const [balances, setBalances] = useState();
 
   useEffect(() => {
-    async function getBlockNumber() {
-      setBlockNumber(await alchemy.core.getBlockNumber());
+    async function getBalances() {
+      setBalances(await alchemy.core.getTokenBalances(SafeWallet).then(console.log));
     }
-
-    getBlockNumber();
+    getBalances();
   });
 
-  return <div className="App">Block Number: {blockNumber}</div>;
+  async function displayBalances() {
+    const tokenBalances = JSON.parse(balances).tokenBalances
+    for (let i = 0; i < tokenBalances.length; i++){
+      return <div className="App">Balances: {tokenBalances[i]}</div>;
+    }
+  }
+  displayBalances()
+
 }
 
 export default App;
