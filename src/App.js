@@ -8,6 +8,7 @@ const settings = {
   network: Network.ETH_MAINNET,
 };
 
+//${balance.current_price}
 // You can read more about the packages here:
 //   https://docs.alchemy.com/reference/alchemy-sdk-api-surface-overview#api-surface
 const alchemy = new Alchemy(settings);
@@ -20,15 +21,33 @@ function App() {
   useEffect(() => {
     async function getBalances() {
       const tokenBalances = await alchemy.core.getTokenBalances(SafeWallet);
+
       const balances = await Promise.all(tokenBalances.tokenBalances.map(async (token) => {
         const metadata = await alchemy.core.getTokenMetadata(token.contractAddress);
         const balance = Number(token.tokenBalance) / (10 ** metadata.decimals);
-        return { name: metadata.name, balance };
+        //const priceData = await getTokenPrice(token.contractAddress);
+        return {
+          name: metadata.name,
+          balance: balance,
+          //symbol: priceData.symbol,
+          //price: priceData.current_price
+        }
       }));
       setBalances(balances);
     }
     getBalances();
   }, []);
+
+  async function getTokenPrice(tokenAddress) {
+    const response = await fetch(`https://api.alchemyapi.io/v2/tokens/${tokenAddress}/quote?vs_currency=usd`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'x-alchemy-token': settings.apiKey
+      }
+    });
+    const data = await response.json();
+    return data;
+  }
 
   return (
     <div>
@@ -36,7 +55,7 @@ function App() {
       {balances && balances.length !== 0 ? (
         balances.map((balance, index) => (
           <div key={index}>
-            <p>{balance.name} Balance: {balance.balance}</p>
+            <p>{balance.balance} {balance.name} </p>
           </div>
         ))
       ) : (
