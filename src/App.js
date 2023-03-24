@@ -19,18 +19,31 @@ function App() {
 
   useEffect(() => {
     async function getBalances() {
-      setBalances(await alchemy.core.getTokenBalances(SafeWallet).then(console.log));
+      const tokenBalances = await alchemy.core.getTokenBalances(SafeWallet);
+      const balances = await Promise.all(tokenBalances.tokenBalances.map(async (token) => {
+        const metadata = await alchemy.core.getTokenMetadata(token.contractAddress);
+        const balance = Number(token.tokenBalance) / (10 ** metadata.decimals);
+        return { name: metadata.name, balance };
+      }));
+      setBalances(balances);
     }
     getBalances();
-  });
+  }, []);
 
-  async function displayBalances() {
-    const tokenBalances = JSON.parse(balances).tokenBalances
-    for (let i = 0; i < tokenBalances.length; i++){
-      return <div className="App">Balances: {tokenBalances[i]}</div>;
-    }
-  }
-  displayBalances()
+  return (
+    <div>
+      <h1>Web3 Equities Token Holdings</h1>
+      {balances && balances.length !== 0 ? (
+        balances.map((balance, index) => (
+          <div key={index}>
+            <p>{balance.name} Balance: {balance.balance}</p>
+          </div>
+        ))
+      ) : (
+        <p>Loading...</p>
+      )}
+    </div>
+  );
 
 }
 
