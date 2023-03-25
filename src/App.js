@@ -9,6 +9,7 @@ const settings = {
 };
 
 const { ApolloClient, gql, InMemoryCache } = require('@apollo/client');
+let runningTotal = 0;
 
 // Instantiate an Apollo client with the Uniswap subgraph
 const client = new ApolloClient({
@@ -39,9 +40,6 @@ async function getTokenPrice(tokenAddress) {
   const tokenData = result.data.token;
   const bundleData = result.data.bundle;
   const ethPrice = bundleData.ethPrice;
-
-  console.log(tokenData.name, tokenData.decimals)
-
   const price = (tokenData.derivedETH * ethPrice) ;
 
   return {
@@ -70,7 +68,6 @@ function App() {
         const balance = Number(token.tokenBalance) / (10 ** metadata.decimals);
         const priceData = await getTokenPrice(token.contractAddress);
         const value = priceData.current_price * balance;
-        console.log(priceData.current_price)
         return {
           name: metadata.name,
           balance: balance,
@@ -83,17 +80,21 @@ function App() {
     getBalances();
   }, []);
 
-  
+  const totalPortfolioValue = balances && balances.length !== 0 ? balances.reduce((total, balance) => total + (balance.balance), 0) : 0;
 
   return (
     <div>
       <h1>Web3 Equities Token Holdings</h1>
+      <h2>Total Portfolio Value: {totalPortfolioValue.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}</h2>
+      <h4>Positions:</h4>
       {balances && balances.length !== 0 ? (
-        balances.map((balance, index) => (
-          <div key={index}>
-            <p>{balance.balance} {balance.name} ${balance.price}</p>
-          </div>
-        ))
+        balances.map((balance, index) => {
+          return (
+            <div key={index}>
+              <p>{balance.balance.toFixed(2)} {balance.name} ${balance.price}</p>
+            </div>
+          )
+        })
       ) : (
         <p>Loading...</p>
       )}
