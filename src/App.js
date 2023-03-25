@@ -9,7 +9,6 @@ const settings = {
 };
 
 const { ApolloClient, gql, InMemoryCache } = require('@apollo/client');
-let runningTotal = 0;
 
 // Instantiate an Apollo client with the Uniswap subgraph
 const client = new ApolloClient({
